@@ -29,3 +29,13 @@ def get_survey_keyboard() -> InlineKeyboardMarkup:
     )
     
     return keyboard
+
+def get_cancel_keyboard() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup()
+
+    keyboard.add(
+        InlineKeyboardButton('Отмена', callback_data='cancel')
+    )
+
+    return keyboard
+
