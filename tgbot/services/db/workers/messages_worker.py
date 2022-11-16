@@ -18,7 +18,7 @@ class MessageWorker(Worker):
 
     async def get_message(self, message_id: int) -> str:
         sql = f'''
-        SELECT message FROM {self._table_name} where message_id={message_id}
+        SELECT message FROM {self._table_name} where id={message_id}
         '''
         
         return (await self.fetchone(sql))['message']
@@ -43,8 +43,8 @@ class MessageWorker(Worker):
 
         '''
         sql = f'''
-        INSERT INTO {self._table_name} (message_name, message) 
-        VALUES ('Приветствие', '{hello_message}'), ('Ссылка на телеграм канал', 'https://t.me/lico_atopii')
+        INSERT INTO {self._table_name} (id, message_name, message) 
+        VALUES (0, 'Приветствие', '{hello_message}'), (1, 'Ссылка на телеграм канал', 'https://t.me/lico_atopii')
         '''
 
         await self.execute(sql)

@@ -12,17 +12,8 @@ async def info_suggest(call: CallbackQuery):
 
 
 async def no_info_suggest(call: CallbackQuery):
-    menu_message = '''
-    Привет! Это бот #уАтопииЕстьЛицо. Он поможет тебе попасть в телеграм-канал, который мы сделали для пациентов с атопическим дерматитом и родителей детей с этим заболеванием. 
-
-
-ТГ-канал #уАтопииЕстьЛицо — место, где благодаря знаниям и поддержке экспертов, вы сможете разобраться в этом заболевании. Нам важно, чтобы знания, которые вы  получите тут, научили вас контролировать заболевание, помогли вам испытать облегчение и обрести уверенность в том, что вы делаете все правильно.
-
-Вокруг атопического дерматита много мифов, и наша миссия – развеять их и научить вас жить с этим заболеванием! 
-
-Вы с нами? 
-    '''
-    await call.message.edit_text(menu_message, reply_markup=inline_keyboard.get_menu_keyboard())
+    db = call.bot.get('database')
+    await call.message.edit_text(await db.messages_worker.get_message(0), reply_markup=inline_keyboard.get_menu_keyboard(await db.messages_worker.get_message(1)))
     await call.answer()
 
     
@@ -67,14 +58,36 @@ async def get_email(message: Message, state: FSMContext):
     await message.bot.edit_message_text(
         chat_id=message.from_id,
         message_id=prev_menu_id,
-        text='Замечательно! Вы можете оставить номер телефона по желанию',
+        text='Замечательно! Ниже по желанию вы можете оставить номер телефона. Вводите номер в международном формате. Например +79998887766',
         reply_markup=inline_keyboard.get_phone_cancel_keyboard()
     )
 
 
-async def get_phone_number(message: Message, state: FSMContext):
-    phone_number = message.text
+async def get_no_phone_number(call: CallbackQuery, state: FSMContext):
+    db = call.bot.get('database')
+    
+    state_data = await state.get_data()
+    
+    await state.finish()
 
+    full_name = state_data['full_name'] 
+    email = state_data['email']
+
+    # add to db full_name/email/phone_number
+
+    await call.message.edit_text(
+        text=f'Благодарим за заполнение анкеты! Ваши данные: {full_name}, {email}',
+        reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1))
+    )
+
+    await call.answer()
+
+
+
+async def get_phone_number(message: Message, state: FSMContext):
+    db = message.bot.get('database')
+    phone_number = message.text
+    
     state_data = await state.get_data()
     prev_menu_id = state_data['prev_menu_id']
     
@@ -90,7 +103,7 @@ async def get_phone_number(message: Message, state: FSMContext):
         chat_id=message.from_id,
         message_id=prev_menu_id,
         text=f'Благодарим за заполнение анкеты! Ваши данные: {full_name}, {email}, {phone_number}',
-        reply_markup=inline_keyboard.get_link_keyboard()
+        reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1))
     )
 
 
@@ -101,4 +114,5 @@ def register_main(dp: Dispatcher):
     dp.register_callback_query_handler(input_full_name, text='to_survey')
     dp.register_message_handler(get_full_name, state=SurveyState.waiting_for_full_name)
     dp.register_message_handler(get_email, state=SurveyState.waiting_for_email)
-    dp.register_message_handler(get_phone_number, state=SurveyState.waiting_for_phone_number)
+    dp.register_callback_query_handler(get_no_phone_number, text='no_phone', state='*')
+    dp.register_message_handler(get_phone_number, state=SurveyState.waiting_for_phone_number) 

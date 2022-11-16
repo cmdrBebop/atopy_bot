@@ -13,6 +13,8 @@ from tgbot.handlers.get_data import register_main
 
 from tgbot.middlewares.environment import EnvironmentMiddleware
 
+from tgbot.services.db.database import Database
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +43,17 @@ async def main():
     bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
     dp = Dispatcher(bot, storage=storage)
 
+    database = Database(
+        host=config.db.host,
+        password=config.db.password,
+        user=config.db.user,
+        database=config.db.database,
+    )
+
     bot['config'] = config
+    bot['database'] = database
+    # await database.create_all()
+    # await database.messages_worker.insert_default_messages()
 
     register_all_middlewares(dp, config)
     register_all_filters(dp)
@@ -51,6 +63,9 @@ async def main():
     try:
         await dp.start_polling()
     finally:
+
+        await database.close_pools()
+        
         await dp.storage.close()
         await dp.storage.wait_closed()
         await bot.session.close()

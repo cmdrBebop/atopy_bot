@@ -53,22 +53,22 @@ def get_phone_cancel_keyboard() -> InlineKeyboardMarkup:
     return keyboard
 
 
-def get_menu_keyboard() -> InlineKeyboardMarkup:
+def get_menu_keyboard(link: str) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
 
     keyboard.add(
-        InlineKeyboardButton('Ссылка', url='https://t.me/lico_atopii'),
+        InlineKeyboardButton('Ссылка', url=link),
         InlineKeyboardButton('К анкете', callback_data='to_survey')
     )
 
     return keyboard
 
 
-def get_link_keyboard() -> InlineKeyboardMarkup:
+def get_link_keyboard(link: str) -> InlineKeyboardMarkup:
     keyboard = InlineKeyboardMarkup()
 
     keyboard.add(
-        InlineKeyboardButton('Ссылка', url='https://t.me/lico_atopii')
+        InlineKeyboardButton('Ссылка', url=link)
     )
 
     return keyboard
