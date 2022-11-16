@@ -10,7 +10,7 @@ from tgbot.services.mindbox.schemas import CustomerData, APIError, InvalidEmail,
 
 
 async def info_suggest(call: CallbackQuery):
-    await call.message.edit_text('Хотите получать дополнительную инфомацию?', reply_markup=inline_keyboard.get_info_suggest_keyboard())
+    await call.message.edit_text('Хочешь получать информацию о наших мероприятиях, подкастах, скидках и других приятных бонусах?', reply_markup=inline_keyboard.get_info_suggest_keyboard())
     await call.answer()
 
 
