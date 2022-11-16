@@ -4,6 +4,9 @@ from aiogram.types import CallbackQuery, Message
 from tgbot.misc.states import SurveyState
 
 import tgbot.keyboards.inline as inline_keyboard
+from tgbot.services.google_sheets import GoogleSheets
+from tgbot.services.mindbox import MindBox
+from tgbot.services.mindbox.schemas import CustomerData, APIError, InvalidEmail, InvalidPhoneNumber, CustomData
 
 
 async def info_suggest(call: CallbackQuery):
@@ -20,6 +23,7 @@ async def no_info_suggest(call: CallbackQuery):
 async def yes_info_suggest(call: CallbackQuery):
     await call.message.edit_text('Ура! Заполни, пожалуйста, небольшую анкету', reply_markup=inline_keyboard.get_survey_keyboard())
     await call.answer()
+
 
 async def input_full_name(call: CallbackQuery, state: FSMContext):
     await call.message.edit_text('Введите ФИО', reply_markup=inline_keyboard.get_cancel_keyboard())
@@ -64,6 +68,8 @@ async def get_email(message: Message, state: FSMContext):
 
 
 async def get_no_phone_number(call: CallbackQuery, state: FSMContext):
+    mindbox = call.bot.get('mindbox')
+    google_sheets = call.bot.get('google_sheets')
     db = call.bot.get('database')
     
     state_data = await state.get_data()
@@ -81,10 +87,12 @@ async def get_no_phone_number(call: CallbackQuery, state: FSMContext):
     )
 
     await call.answer()
-
+    await register_customer(mindbox, google_sheets, call.message, call.from_user.id, full_name, email)
 
 
 async def get_phone_number(message: Message, state: FSMContext):
+    mindbox = message.bot.get('mindbox')
+    google_sheets = message.bot.get('google_sheets')
     db = message.bot.get('database')
     phone_number = message.text
     
@@ -105,6 +113,42 @@ async def get_phone_number(message: Message, state: FSMContext):
         text=f'Благодарим за заполнение анкеты! Ваши данные: {full_name}, {email}, {phone_number}',
         reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1))
     )
+
+    await register_customer(mindbox, google_sheets, message, message.from_id, full_name, email, phone_number)
+
+
+async def register_customer(mindbox: MindBox, google_sheets: GoogleSheets, message: Message, telegram_id, full_name, email, phone_number=''):
+    fio = full_name.split()
+    if len(fio) != 3:
+        await message.answer('Неверно указано ФИО. Попробуйте ещё раз.')
+        return
+
+    last_name, first_name, middle_name = fio
+
+    customer = CustomerData(
+        email=email,
+        lastName=last_name,
+        firstName=first_name,
+        middleName=middle_name,
+        mobilePhone=phone_number,
+        customFields=CustomData(
+            customerTelegramId=telegram_id
+        )
+    )
+
+    try:
+        result = await mindbox.register_customer_with_telegram_bot(customer)
+    except APIError:
+        await message.answer('Что-то пошло не так. Попробуйте позже или свяжитесь с администратором.')
+    except InvalidEmail:
+        await message.answer('Неверно указана почта. Попробуйте ещё раз.')
+    except InvalidPhoneNumber:
+        await message.answer('Неверно указан номер телефона. Попробуйте ещё раз.')
+    else:
+        if result:
+            google_sheets.add_customer(full_name, email, phone_number)
+        else:
+            await message.answer('Что-то пошло не так. Попробуйте позже или свяжитесь с администратором.')
 
 
 def register_main(dp: Dispatcher):

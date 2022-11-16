@@ -6,7 +6,6 @@ from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.fsm_storage.redis import RedisStorage2
 
 from tgbot.config import load_config
-from tgbot.filters.admin import AdminFilter
 
 from tgbot.handlers.start import register_start
 from tgbot.handlers.get_data import register_main
@@ -15,16 +14,15 @@ from tgbot.handlers.admin import register_admin
 from tgbot.middlewares.environment import EnvironmentMiddleware
 
 from tgbot.services.db.database import Database
+from tgbot.services.mindbox import MindBox
+from tgbot.services.google_sheets import GoogleSheets
+
 
 logger = logging.getLogger(__name__)
 
 
 def register_all_middlewares(dp, config):
     dp.setup_middleware(EnvironmentMiddleware(config=config))
-
-
-def register_all_filters(dp):
-    dp.filters_factory.bind(AdminFilter)
 
 
 def register_all_handlers(dp):
@@ -52,13 +50,17 @@ async def main():
         database=config.db.database,
     )
 
+    mindbox = MindBox(config.misc.mindbox_secret_key)
+    google_sheets = GoogleSheets(config.google_sheets.credentials_file, config.google_sheets.spreadsheet_id)
+
     bot['config'] = config
     bot['database'] = database
+    bot['mindbox'] = mindbox
+    bot['google_sheets'] = google_sheets
     # await database.create_all()
     # await database.messages_worker.insert_default_messages()
 
     register_all_middlewares(dp, config)
-    register_all_filters(dp)
     register_all_handlers(dp)
 
     # start
@@ -78,3 +80,4 @@ if __name__ == '__main__':
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):
         logger.error("Bot stopped!")
+        raise
