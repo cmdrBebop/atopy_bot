@@ -11,6 +11,7 @@ from tgbot.filters.admin import AdminFilter
 from tgbot.handlers.start import register_start
 from tgbot.handlers.get_data import register_main
 
+from tgbot.handlers.admin import register_admin
 from tgbot.middlewares.environment import EnvironmentMiddleware
 
 from tgbot.services.db.database import Database
@@ -28,6 +29,7 @@ def register_all_filters(dp):
 
 def register_all_handlers(dp):
     register_start(dp)
+    register_admin(dp)
     register_main(dp)
 
 

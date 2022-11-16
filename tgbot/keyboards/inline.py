@@ -73,3 +73,24 @@ def get_link_keyboard(link: str) -> InlineKeyboardMarkup:
 
     return keyboard
 
+
+def get_admin_menu_keyboard() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup()
+
+    keyboard.add(
+        InlineKeyboardButton('Поменять приветстие', callback_data='change_greetings'),
+        InlineKeyboardButton('Поменять ссылку на канал', callback_data='change_chanel_link')
+    )
+
+    return keyboard
+
+
+def get_back_to_admin_menu_keyboard() -> InlineKeyboardMarkup:
+    keyboard = InlineKeyboardMarkup()
+
+    keyboard.add(
+        InlineKeyboardButton('Назад', callback_data='back_to_admin')
+    )
+
+    return keyboard
+
