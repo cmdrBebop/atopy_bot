@@ -85,9 +85,10 @@ async def get_no_phone_number(call: CallbackQuery, state: FSMContext):
         text=f'Благодарим за заполнение анкеты! Ваши данные: {full_name}, {email}',
     )
 
-    await register_customer(mindbox, google_sheets, call.message, call.from_user.id, full_name, email)
+    success = await register_customer(mindbox, google_sheets, call.message, call.from_user.id, full_name, email)
 
-    await call.message.answer('Ссылка в канал', reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1)))
+    if success:
+        await call.message.answer('Ссылка в канал', reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1)))
     await call.answer()
 
 
@@ -114,16 +115,16 @@ async def get_phone_number(message: Message, state: FSMContext):
         text=f'Благодарим за заполнение анкеты! Ваши данные: {full_name}, {email}, {phone_number}',
     )
 
-    await register_customer(mindbox, google_sheets, message, message.from_id, full_name, email, phone_number)
+    success = await register_customer(mindbox, google_sheets, message, message.from_id, full_name, email, phone_number)
+    if success:
+        await message.answer('Ссылка в канал', reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1)))
 
-    await message.answer('Ссылка в канал', reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1)))
 
-
-async def register_customer(mindbox: MindBox, google_sheets: GoogleSheets, message: Message, telegram_id, full_name, email, phone_number=''):
+async def register_customer(mindbox: MindBox, google_sheets: GoogleSheets, message: Message, telegram_id, full_name, email, phone_number='') -> bool:
     fio = full_name.split()
     if len(fio) != 3:
         await message.answer('Неверно указано ФИО. Попробуйте ещё раз.')
-        return
+        return False
 
     last_name, first_name, middle_name = fio
 
@@ -142,15 +143,20 @@ async def register_customer(mindbox: MindBox, google_sheets: GoogleSheets, messa
         result = await mindbox.register_customer_with_telegram_bot(customer)
     except APIError:
         await message.answer('Что-то пошло не так. Попробуйте позже или свяжитесь с администратором.')
+        return False
     except InvalidEmail:
         await message.answer('Неверно указана почта. Попробуйте ещё раз.')
+        return False
     except InvalidPhoneNumber:
         await message.answer('Неверно указан номер телефона. Попробуйте ещё раз.')
+        return False
     else:
         if result:
             google_sheets.add_customer(full_name, email, phone_number)
+            return True
         else:
             await message.answer('Что-то пошло не так. Попробуйте позже или свяжитесь с администратором.')
+            return False
 
 
 def register_main(dp: Dispatcher):
