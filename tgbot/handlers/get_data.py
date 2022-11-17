@@ -83,11 +83,12 @@ async def get_no_phone_number(call: CallbackQuery, state: FSMContext):
 
     await call.message.edit_text(
         text=f'Благодарим за заполнение анкеты! Ваши данные: {full_name}, {email}',
-        reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1))
     )
 
-    await call.answer()
     await register_customer(mindbox, google_sheets, call.message, call.from_user.id, full_name, email)
+
+    await call.message.answer('Ссылка в канал', reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1)))
+    await call.answer()
 
 
 async def get_phone_number(message: Message, state: FSMContext):
@@ -111,10 +112,11 @@ async def get_phone_number(message: Message, state: FSMContext):
         chat_id=message.from_id,
         message_id=prev_menu_id,
         text=f'Благодарим за заполнение анкеты! Ваши данные: {full_name}, {email}, {phone_number}',
-        reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1))
     )
 
     await register_customer(mindbox, google_sheets, message, message.from_id, full_name, email, phone_number)
+
+    await message.answer('Ссылка в канал', reply_markup=inline_keyboard.get_link_keyboard(await db.messages_worker.get_message(1)))
 
 
 async def register_customer(mindbox: MindBox, google_sheets: GoogleSheets, message: Message, telegram_id, full_name, email, phone_number=''):
