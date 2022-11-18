@@ -21,7 +21,7 @@ async def no_info_suggest(call: CallbackQuery):
 
     
 async def yes_info_suggest(call: CallbackQuery):
-    await call.message.edit_text('Ура! Заполни, пожалуйста, небольшую анкету', reply_markup=inline_keyboard.get_survey_keyboard())
+    await call.message.edit_text('Заполни, пожалуйста, небольшую анкету', reply_markup=inline_keyboard.get_survey_keyboard())
     await call.answer()
 
 

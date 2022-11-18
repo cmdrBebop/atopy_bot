@@ -47,7 +47,7 @@ def get_phone_cancel_keyboard() -> InlineKeyboardMarkup:
 
     keyboard.add(
         InlineKeyboardButton('Не хочу оставлять телефон', callback_data='no_phone'),
-        InlineKeyboardButton('Отмена', callback_data='cancel')
+        InlineKeyboardButton('В начало', callback_data='cancel')
     )
 
     return keyboard
