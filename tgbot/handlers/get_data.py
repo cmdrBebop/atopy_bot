@@ -82,7 +82,7 @@ async def get_no_phone_number(call: CallbackQuery, state: FSMContext):
     # add to db full_name/email/phone_number
 
     await call.message.edit_text(
-        text=f'Благодарим за заполнение анкеты! Ваши данные: {full_name}, {email}',
+        text=f'Ваши данные: {full_name}, {email}',
     )
 
     success = await register_customer(mindbox, google_sheets, call.message, call.from_user.id, full_name, email)
@@ -123,7 +123,7 @@ async def get_phone_number(message: Message, state: FSMContext):
 async def register_customer(mindbox: MindBox, google_sheets: GoogleSheets, message: Message, telegram_id, full_name, email, phone_number='') -> bool:
     fio = full_name.split()
     if len(fio) != 3:
-        await message.answer('Неверно указано ФИО. Попробуйте ещё раз.')
+        await message.answer('Неверно указано ФИО. Попробуйте ещё раз.', reply_markup=inline_keyboard.get_survey_keyboard())
         return False
 
     last_name, first_name, middle_name = fio
@@ -142,20 +142,20 @@ async def register_customer(mindbox: MindBox, google_sheets: GoogleSheets, messa
     try:
         result = await mindbox.register_customer_with_telegram_bot(customer)
     except APIError:
-        await message.answer('Что-то пошло не так. Попробуйте позже или свяжитесь с администратором.')
+        await message.answer('Что-то пошло не так. Попробуйте позже или свяжитесь с администратором.', reply_markup=inline_keyboard.get_survey_keyboard())
         return False
     except InvalidEmail:
-        await message.answer('Неверно указана почта. Попробуйте ещё раз.')
+        await message.answer('Неверно указана почта. Попробуйте ещё раз.', reply_markup=inline_keyboard.get_survey_keyboard())
         return False
     except InvalidPhoneNumber:
-        await message.answer('Неверно указан номер телефона. Попробуйте ещё раз.')
+        await message.answer('Неверно указан номер телефона. Попробуйте ещё раз.', reply_markup=inline_keyboard.get_survey_keyboard())
         return False
     else:
         if result:
             google_sheets.add_customer(full_name, email, phone_number)
             return True
         else:
-            await message.answer('Что-то пошло не так. Попробуйте позже или свяжитесь с администратором.')
+            await message.answer('Что-то пошло не так. Попробуйте позже или свяжитесь с администратором.', reply_markup=inline_keyboard.get_survey_keyboard())
             return False
 
 
